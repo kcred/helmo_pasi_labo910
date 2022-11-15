@@ -1,0 +1,23 @@
+name: Docker Image CI + Vuln Check
+
+on: [push]
+
+jobs:
+  build-secure-and-push:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+
+    - run: docker build . -t ${{ secrets.CONTAINER_REGISTRY }}/python3:${{ github.sha }}
+    
+    - uses: Azure/docker-login@v1
+      with:
+        login-server: ${{ secrets.CONTAINER_REGISTRY }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+    
+    - run: docker push ${{ secrets.CONTAINER_REGISTRY }}/python3:${{ github.sha }}
+    
+    - uses: Azure/container-scan@v0
+      with:
+        image-name: ${{ secrets.CONTAINER_REGISTRY }}/python3:${{ github.sha }}
